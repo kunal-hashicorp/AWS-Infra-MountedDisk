@@ -1,43 +1,60 @@
 variable "aws_region" {
-  type    = string
-  default = "ap-south-1"
+  type = string
 }
 
 variable "vpc_cidr" {
-  type    = string
-  default = "10.50.0.0/16"
+  type = string
 }
 
 variable "public_subnet_cidr" {
-  type    = string
-  default = "10.50.1.0/24"
+  type = string
 }
 
 variable "instance_type" {
-  type    = string
-  default = "t3.xlarge"
+  type = string
 }
 
 variable "disk_size_gb" {
-  type    = number
-  default = 50
+  type = number
 }
 
 variable "hosted_zone_name" {
-  type    = string
-  default = "tf-support.hashicorpdemo.com"
+  type = string
 }
 
 variable "record_name" {
-  type    = string
-  default = "ksrepmd"
+  type = string
 }
 
 variable "tags" {
   type = map(string)
-  default = {
-    project     = "aws-tf"
-    environment = "dev"
-    owner       = "kunal"
-  }
+}
+
+# Names to parameterize
+variable "vpc_name" {
+  type = string
+}
+
+variable "igw_name" {
+  type = string
+}
+
+variable "subnet_name" {
+  type = string
+}
+
+variable "route_table_name" {
+  type = string
+}
+
+variable "sg_name" {
+  type = string
+}
+
+variable "ec2_name" {
+  type = string
+}
+
+variable "eip_name" {
+  type = string
 }
