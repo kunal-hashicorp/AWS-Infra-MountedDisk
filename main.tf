@@ -21,33 +21,39 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags                 = merge(var.tags, { Name = "tf-vpc" })
+  tags = merge(var.tags, { Name = var.vpc_name })
 }
 
+# Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags   = merge(var.tags, { Name = "tf-igw" })
+  tags   = merge(var.tags, { Name = var.igw_name })
 }
 
+# Public Subnet
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
-  tags                    = merge(var.tags, { Name = "tf-public-subnet" })
+  tags                    = merge(var.tags, { Name = var.subnet_name })
 }
 
+# Route Table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
-  tags = merge(var.tags, { Name = "tf-public-rt" })
+
+  tags = merge(var.tags, { Name = var.route_table_name })
 }
 
 resource "aws_route_table_association" "public_assoc" {
@@ -55,8 +61,9 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public.id
 }
 
+# Security Group
 resource "aws_security_group" "web_sg" {
-  name        = "tf-web-sg"
+  name        = var.sg_name
   description = "Allow SSH/HTTP/HTTPS"
   vpc_id      = aws_vpc.main.id
 
@@ -92,9 +99,10 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, { Name = "tf-web-sg" })
+  tags = merge(var.tags, { Name = var.sg_name })
 }
 
+# EC2 Instance
 resource "aws_instance" "web" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
@@ -117,12 +125,13 @@ resource "aws_instance" "web" {
               chmod 600 /home/ubuntu/.ssh/authorized_keys
               EOF
 
-  tags = merge(var.tags, { Name = "tf-web-ec2" })
+  tags = merge(var.tags, { Name = var.ec2_name })
 }
 
+# Elastic IP
 resource "aws_eip" "web_eip" {
   domain = "vpc"
-  tags   = merge(var.tags, { Name = "tf-web-eip" })
+  tags   = merge(var.tags, { Name = var.eip_name })
 }
 
 resource "aws_eip_association" "web_eip_assoc" {
@@ -130,6 +139,7 @@ resource "aws_eip_association" "web_eip_assoc" {
   allocation_id = aws_eip.web_eip.id
 }
 
+# Route53
 data "aws_route53_zone" "target" {
   name         = local.zone_name
   private_zone = false
