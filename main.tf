@@ -1,5 +1,18 @@
 locals {
+  env       = var.environment
   zone_name = endswith(var.hosted_zone_name, ".") ? var.hosted_zone_name : "${var.hosted_zone_name}."
+
+  # add suffix only if env is non-empty
+  suffix = var.environment != "" ? "-${var.environment}" : ""
+
+  vpc_name         = "${var.vpc_prefix}${local.suffix}"
+  igw_name         = "${var.igw_prefix}${local.suffix}"
+  subnet_name      = "${var.subnet_prefix}${local.suffix}"
+  route_table_name = "${var.route_table_prefix}${local.suffix}"
+  sg_name          = "${var.sg_prefix}${local.suffix}"
+  ec2_name         = "${var.ec2_prefix}${local.suffix}"
+  eip_name         = "${var.eip_prefix}${local.suffix}"
+  record_name      = "${var.record_prefix}${local.suffix}"
 }
 
 data "aws_availability_zones" "available" {
@@ -26,13 +39,13 @@ resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = merge(var.tags, { Name = var.vpc_name })
+  tags                 = merge(var.tags, { Name = local.vpc_name })
 }
 
 # Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags   = merge(var.tags, { Name = var.igw_name })
+  tags   = merge(var.tags, { Name = local.igw_name })
 }
 
 # Public Subnet
@@ -41,7 +54,7 @@ resource "aws_subnet" "public" {
   cidr_block              = var.public_subnet_cidr
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
-  tags                    = merge(var.tags, { Name = var.subnet_name })
+  tags                    = merge(var.tags, { Name = local.subnet_name })
 }
 
 # Route Table
@@ -53,7 +66,7 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
 
-  tags = merge(var.tags, { Name = var.route_table_name })
+  tags = merge(var.tags, { Name = local.route_table_name })
 }
 
 resource "aws_route_table_association" "public_assoc" {
@@ -63,8 +76,8 @@ resource "aws_route_table_association" "public_assoc" {
 
 # Security Group
 resource "aws_security_group" "web_sg" {
-  name        = var.sg_name
-  description = "Allow SSH/HTTP/HTTPS"
+  name        = local.sg_name
+  description = "Allow SSH/HTTP/HTTPS/8800"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -91,6 +104,14 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "TFE Console"
+    from_port   = 8800
+    to_port     = 8800
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     description = "All egress"
     from_port   = 0
@@ -99,7 +120,7 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, { Name = var.sg_name })
+  tags = merge(var.tags, { Name = local.sg_name })
 }
 
 # EC2 Instance
@@ -125,13 +146,13 @@ resource "aws_instance" "web" {
               chmod 600 /home/ubuntu/.ssh/authorized_keys
               EOF
 
-  tags = merge(var.tags, { Name = var.ec2_name })
+  tags = merge(var.tags, { Name = local.ec2_name })
 }
 
 # Elastic IP
 resource "aws_eip" "web_eip" {
   domain = "vpc"
-  tags   = merge(var.tags, { Name = var.eip_name })
+  tags   = merge(var.tags, { Name = local.eip_name })
 }
 
 resource "aws_eip_association" "web_eip_assoc" {
@@ -147,7 +168,7 @@ data "aws_route53_zone" "target" {
 
 resource "aws_route53_record" "a_record" {
   zone_id = data.aws_route53_zone.target.zone_id
-  name    = "${var.record_name}.${chomp(data.aws_route53_zone.target.name)}"
+  name    = local.record_name
   type    = "A"
   ttl     = 300
   records = [aws_eip.web_eip.public_ip]
