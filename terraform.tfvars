@@ -6,7 +6,8 @@ instance_type = "t3.xlarge"
 disk_size_gb  = 50
 
 hosted_zone_name = "tf-support.hashicorpdemo.com"
-record_name      = "ks-rep-mdtest"
+
+environment = ""
 
 tags = {
   project     = "aws-tf"
@@ -14,11 +15,12 @@ tags = {
   owner       = "kunal"
 }
 
-# Parameterized resource names
-vpc_name         = "kunal-vpc-dev"
-igw_name         = "kunal-igw-dev"
-subnet_name      = "kunal-public-subnet-dev"
-route_table_name = "kunal-rt-dev"
-sg_name          = "kunal-sg-dev"
-ec2_name         = "kunal-tfe-ec2-dev"
-eip_name         = "kunal-eip-dev"
+# Optional: override prefixes (defaults are already set in variables.tf)
+vpc_prefix         = "kunal-vpc"
+igw_prefix         = "kunal-igw"
+subnet_prefix      = "kunal-public-subnet"
+route_table_prefix = "kunal-rt"
+sg_prefix          = "kunal-sg"
+ec2_prefix         = "kunal-tfe-ec2"
+eip_prefix         = "kunal-eip"
+record_prefix      = "ks-rep-mdtest"
