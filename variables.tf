@@ -22,39 +22,52 @@ variable "hosted_zone_name" {
   type = string
 }
 
-variable "record_name" {
-  type = string
-}
-
 variable "tags" {
   type = map(string)
 }
 
-# Names to parameterize
-variable "vpc_name" {
-  type = string
+variable "environment" {
+  type    = string
+  default = ""
 }
 
-variable "igw_name" {
-  type = string
+# Prefix variables for parameterized names
+variable "vpc_prefix" {
+  type    = string
+  default = "tf-vpc"
 }
 
-variable "subnet_name" {
-  type = string
+variable "igw_prefix" {
+  type    = string
+  default = "tf-igw"
 }
 
-variable "route_table_name" {
-  type = string
+variable "subnet_prefix" {
+  type    = string
+  default = "tf-subnet"
 }
 
-variable "sg_name" {
-  type = string
+variable "route_table_prefix" {
+  type    = string
+  default = "tf-rt"
 }
 
-variable "ec2_name" {
-  type = string
+variable "sg_prefix" {
+  type    = string
+  default = "tf-sg"
 }
 
-variable "eip_name" {
-  type = string
+variable "ec2_prefix" {
+  type    = string
+  default = "tf-ec2"
+}
+
+variable "eip_prefix" {
+  type    = string
+  default = "tf-eip"
+}
+
+variable "record_prefix" {
+  type    = string
+  default = "tfe"
 }
