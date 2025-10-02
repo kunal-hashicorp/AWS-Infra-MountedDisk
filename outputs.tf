@@ -8,7 +8,7 @@ output "private_ip" {
   value       = aws_instance.web.private_ip
 }
 
-output "fqdn_name" {
+output "fqdn" {
   description = "Fully qualified domain name mapped to the EC2 public IP"
   value       = aws_route53_record.a_record.fqdn
 }
